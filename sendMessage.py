@@ -1,6 +1,5 @@
 import asyncio
 from playwright.async_api import async_playwright
-import time
 from datetime import datetime
 import argparse
 
@@ -38,6 +37,13 @@ def main():
 
 
 async def send_text_message(password, sendText, room):
+    """LINEに自動的にログインし、メッセージを送信する関数
+
+    Args:
+        password (str): ログインパスワード
+        sendText (str): 送りたいテキスト
+        room (str): 送りたい相手またはグループ
+    """
     extension_path = "./3.6.0_0"  # 拡張機能のフォルダパス
 
     async with async_playwright() as p:
