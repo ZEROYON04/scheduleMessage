@@ -28,7 +28,7 @@ def main():
     sendText = f"現在の時刻は\n {current_time} \nです。"
 
     asyncio.run(
-        wrapped_send_text_message(
+        send_text_message(
             args.password,
             sendText,
             args.room,
