@@ -1,4 +1,5 @@
-from playwright.sync_api import sync_playwright
+import asyncio
+from playwright.async_api import async_playwright
 import time
 from datetime import datetime
 import argparse
@@ -25,27 +26,23 @@ def main():
     if not args.room:
         print("引数 '--room' が指定されていません")
 
-    sendText = (
-        f"プログラムから送ってるから無視してね。現在の時刻は {current_time} です。"
+    sendText = f"現在の時刻は {current_time} です。"
+
+    asyncio.run(
+        send_text_message(
+            args.password,
+            sendText,
+            args.room,
+        )
     )
 
-    send_text_message(
-        args.password,
-        sendText,
-        args.room,
-    )
 
-
-def send_text_message(
-    password,
-    sendText,
-    room,
-):
+async def send_text_message(password, sendText, room):
     extension_path = "./3.6.0_0"  # 拡張機能のフォルダパス
 
-    with sync_playwright() as p:
+    async with async_playwright() as p:
         # ブラウザを起動
-        browser = p.chromium.launch_persistent_context(
+        browser = await p.chromium.launch_persistent_context(
             user_data_dir="./save",  # ユーザーデータの保存先（空の場合、一時的に保存）
             headless=False,  # ヘッドレスモードでは拡張機能が動かない場合がある
             args=[
@@ -55,27 +52,39 @@ def send_text_message(
         )
 
         # 新しいタブを開く
-        page = browser.new_page()
+        page = await browser.new_page()
 
         # 拡張機能のページにアクセス
-        page.goto(
+        await page.goto(
             "chrome-extension://ophjlpahpchlmihnnnihgmmeilfjmjjc/index.html"
         )  # 拡張機能のページ
 
-        # 必要な操作を記述
-        if page.is_visible('input[name="password"]') and page.is_visible(
-            'button[type="submit"]'
-        ):
-            page.fill('input[name="password"]', password)
-            page.click('button[type="submit"]')
-        page.fill("input.searchInput-module__input__ekGp7", room)
-        page.wait_for_selector('button[aria-label="Go chatroom"]')
-        page.click('button[aria-label="Go chatroom"]')
-        page.fill("textarea.input", sendText)
-        page.keyboard.press("Enter")
-        time.sleep(1)
-        # ブラウザを閉じる
-        browser.close()
+        try:
+            # パスワードの入力と送信（必要であれば）
+            if await page.is_visible(
+                'input[name="password"]'
+            ) and await page.is_visible('button[type="submit"]'):
+                await page.fill('input[name="password"]', password)
+                await page.click('button[type="submit"]')
+
+            # ルームの検索
+            await page.fill("input.searchInput-module__input__ekGp7", room)
+            await page.wait_for_selector('button[aria-label="Go chatroom"]')
+            await page.click('button[aria-label="Go chatroom"]')
+
+            # メッセージの入力
+            await page.fill("textarea.input", sendText)
+            await page.keyboard.press("Enter")
+
+            # 追加の待機が必要であれば非同期で待機
+            await page.wait_for_timeout(1000)
+
+        except Exception as e:
+            print(f"エラーが発生しました: {e}")
+
+        finally:
+            # ブラウザを閉じる
+            await browser.close()
 
 
 if __name__ == "__main__":
