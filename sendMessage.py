@@ -25,10 +25,10 @@ def main():
     if not args.room:
         print("引数 '--room' が指定されていません")
 
-    sendText = f"現在の時刻は {current_time} です。"
+    sendText = f"現在の時刻は\n {current_time} \nです。"
 
     asyncio.run(
-        send_text_message(
+        wrapped_send_text_message(
             args.password,
             sendText,
             args.room,
@@ -91,6 +91,17 @@ async def send_text_message(password, sendText, room):
         finally:
             # ブラウザを閉じる
             await browser.close()
+
+
+def wrapped_send_text_message(password, sendText, room):
+    """LINEに自動的にログインし、メッセージを送信する関数を同期関数として実装したもの
+
+    Args:
+        password (str): ログインパスワード
+        sendText (str): 送りたいテキスト
+        room (str): 送りたい相手またはグループ
+    """
+    asyncio.run(send_text_message(password, sendText, room))
 
 
 if __name__ == "__main__":
