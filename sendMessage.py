@@ -10,6 +10,7 @@ def main():
     email = data["email"]
     password = data["password"]
     defaultRoom = data["defaultRoom"]
+    print(email, password, defaultRoom)
 
     # 現在時刻を取得
     current_time = datetime.now()
@@ -53,6 +54,7 @@ async def send_text_message(email, password, sendText, room):
         await page.goto(
             "chrome-extension://ophjlpahpchlmihnnnihgmmeilfjmjjc/index.html",
         )
+        print("拡張機能へアクセス")
 
         try:
             await page.wait_for_selector(
@@ -65,6 +67,7 @@ async def send_text_message(email, password, sendText, room):
                 await page.fill('input[name="email"]', email)
                 await page.fill('input[name="password"]', password)
                 await page.click('button[type="submit"]')
+                print("認証を実行")
 
             await page.wait_for_selector(
                 ":is(strong.pinCodeModal-module__pincode__bFKMn, input.searchInput-module__input__ekGp7)"
@@ -79,6 +82,7 @@ async def send_text_message(email, password, sendText, room):
 
             # ルームの検索
             await page.fill("input.searchInput-module__input__ekGp7", room)
+            print("ルーム検索")
             await page.wait_for_selector('button[aria-label="Go chatroom"]')
             for _ in range(10):
                 await page.click('button[aria-label="Go chatroom"]')
@@ -87,6 +91,7 @@ async def send_text_message(email, password, sendText, room):
 
             # メッセージの入力
             await page.fill("textarea.input", sendText)
+            print("メッセージ入力")
             await page.keyboard.press("Enter")
 
             # 追加の待機が必要であれば非同期で待機
