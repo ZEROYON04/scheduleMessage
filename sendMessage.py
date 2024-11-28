@@ -80,8 +80,10 @@ async def send_text_message(email, password, sendText, room):
             # ルームの検索
             await page.fill("input.searchInput-module__input__ekGp7", room)
             await page.wait_for_selector('button[aria-label="Go chatroom"]')
-            await page.click('button[aria-label="Go chatroom"]')
-            await page.click('button[aria-label="Go chatroom"]')  # 2回クリック
+            for _ in range(10):
+                await page.click('button[aria-label="Go chatroom"]')
+                if await page.is_visible("textarea.input"):
+                    continue
 
             # メッセージの入力
             await page.fill("textarea.input", sendText)
