@@ -105,7 +105,7 @@ async def send_text_message(email, password, sendText, room):
             await browser.close()
 
 
-def wrapped_send_text_message(password, sendText, room):
+def wrapped_send_text_message(email, password, sendText, room):
     """LINEに自動的にログインし、メッセージを送信する関数を同期関数として実装したもの
 
     Args:
@@ -113,7 +113,7 @@ def wrapped_send_text_message(password, sendText, room):
         sendText (str): 送りたいテキスト
         room (str): 送りたい相手またはグループ
     """
-    asyncio.run(send_text_message(password, sendText, room))
+    asyncio.run(send_text_message(email, password, sendText, room))
 
 
 if __name__ == "__main__":
