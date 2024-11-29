@@ -21,7 +21,19 @@ wrapped_send_text_message(email, password, "Message scheduler started!!", defaul
 
 
 # スケジュールを表示
+for schedule in data["schedules"]:
+    dayOfWeek = schedule["day_of_week"]
+    hour = schedule["hour"]
+    minute = schedule["minute"]
+    room = schedule["room"]
+    text = schedule["message"]
+    print(f"Day: {dayOfWeek}, Time: {hour}:{minute}, Room: {room}, Message: {text}")
 
+    scheduler.add_job(
+        wrapped_send_text_message,
+        args=[email, password, text, room],
+        trigger=CronTrigger(day_of_week=dayOfWeek, hour=hour, minute=minute),
+    )
 
 # スケジューラを開始
 scheduler.start()
