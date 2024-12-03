@@ -28,13 +28,21 @@ def main():
 
 
 async def send_text_message(email, password, sendText, room):
-    """LINEに自動的にログインし、メッセージを送信する関数
+    """
+    Sends a text message to a specified chat room using a browser automation tool.
 
     Args:
-        email (str): メールアドレス
-        password (str): ログインパスワード
-        sendText (str): 送りたいテキスト
-        room (str): 送りたい相手またはグループ
+        email (str): The email address used for authentication.
+        password (str): The password used for line authentication.
+        sendText (str): The text message to be sent.
+        room (str): The name of the chat room to send the message to.
+
+    Raises:
+        Exception: If an error occurs during the process, it will be caught and printed.
+
+    Notes:
+        This function uses Playwright for browser automation and requires the LINE
+        browser extension to be installed and accessible at the specified path.
     """
     extension_path = "./3.6.0_0"  # 拡張機能のフォルダパス
 
@@ -106,12 +114,20 @@ async def send_text_message(email, password, sendText, room):
 
 
 def wrapped_send_text_message(email, password, sendText, room):
-    """LINEに自動的にログインし、メッセージを送信する関数を同期関数として実装したもの
+    """
+    Sends a text message to a specified room using the provided email and password.
+
+    This function wraps the asynchronous `send_text_message` function and runs it
+    synchronously using `asyncio.run`.
 
     Args:
-        password (str): ログインパスワード
-        sendText (str): 送りたいテキスト
-        room (str): 送りたい相手またはグループ
+        email (str): The email address used for authentication.
+        password (str): The password used for authentication.
+        sendText (str): The text message to be sent.
+        room (str): The identifier of the room where the message will be sent.
+
+    Returns:
+        None
     """
     asyncio.run(send_text_message(email, password, sendText, room))
 
