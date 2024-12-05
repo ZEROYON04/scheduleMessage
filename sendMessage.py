@@ -2,29 +2,24 @@ import asyncio
 from playwright.async_api import async_playwright
 from datetime import datetime
 import json
+from logging import getLogger, config
+
+with open("./log_config.json", "r") as f:
+    log_conf = json.load(f)
+
+config.dictConfig(log_conf)
+logger = getLogger(__name__)
 
 
-def main():
-    with open("./schedule.json", "r") as file:
+def load_config(file_path):
+    with open(file_path, "r") as file:
         data = json.load(file)
-    email = data["email"]
-    password = data["password"]
-    defaultRoom = data["defaultRoom"]
-    print(email, password, defaultRoom)
+    return data
 
-    # 現在時刻を取得
+
+def get_current_time_message():
     current_time = datetime.now()
-
-    sendText = f"現在の時刻は\n {current_time} \nです。"
-
-    asyncio.run(
-        send_text_message(
-            email,
-            password,
-            sendText,
-            defaultRoom,
-        )
-    )
+    return f"現在の時刻は\n {current_time} \nです。"
 
 
 async def send_text_message(email, password, sendText, room):
@@ -62,7 +57,7 @@ async def send_text_message(email, password, sendText, room):
         await page.goto(
             "chrome-extension://ophjlpahpchlmihnnnihgmmeilfjmjjc/index.html",
         )
-        print("拡張機能へアクセス")
+        logger.info("拡張機能のページにアクセス")
 
         try:
             await page.wait_for_selector(
@@ -75,7 +70,7 @@ async def send_text_message(email, password, sendText, room):
                 await page.fill('input[name="email"]', email)
                 await page.fill('input[name="password"]', password)
                 await page.click('button[type="submit"]')
-                print("認証を実行")
+                logger.info("ログイン")
 
             await page.wait_for_selector(
                 ":is(strong.pinCodeModal-module__pincode__bFKMn, input.searchInput-module__input__ekGp7)"
@@ -86,11 +81,11 @@ async def send_text_message(email, password, sendText, room):
                     "strong.pinCodeModal-module__pincode__bFKMn"
                 )
                 # コンソールに出力
-                print(f"取得したピンコード: {pin_code}")
+                logger.info(f"取得したピンコード: {pin_code}")
 
             # ルームの検索
             await page.fill("input.searchInput-module__input__ekGp7", room)
-            print("ルーム検索")
+            logger.info("ルームの検索")
             await page.wait_for_selector('button[aria-label="Go chatroom"]')
             for _ in range(10):
                 await page.click('button[aria-label="Go chatroom"]')
@@ -99,14 +94,14 @@ async def send_text_message(email, password, sendText, room):
 
             # メッセージの入力
             await page.fill("textarea.input", sendText)
-            print("メッセージ入力")
+            logger.info("メッセージの入力")
             await page.keyboard.press("Enter")
 
             # 追加の待機が必要であれば非同期で待機
             await page.wait_for_timeout(1000)
 
         except Exception as e:
-            print(f"エラーが発生しました: {e}")
+            logger.error(e)
 
         finally:
             # ブラウザを閉じる
@@ -130,6 +125,25 @@ def wrapped_send_text_message(email, password, sendText, room):
         None
     """
     asyncio.run(send_text_message(email, password, sendText, room))
+
+
+def main():
+    config = load_config("./schedule.json")
+    email = config["email"]
+    password = config["password"]
+    defaultRoom = config["defaultRoom"]
+    logger.info(f"email: {email}, password: {password}, defaultRoom: {defaultRoom}")
+
+    sendText = get_current_time_message()
+
+    asyncio.run(
+        send_text_message(
+            email,
+            password,
+            sendText,
+            defaultRoom,
+        )
+    )
 
 
 if __name__ == "__main__":

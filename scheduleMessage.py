@@ -2,9 +2,15 @@ from sendMessage import wrapped_send_text_message
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import time
-import argparse
 from datetime import datetime
 import json
+from logging import getLogger, config
+
+with open("./log_config.json", "r") as f:
+    log_conf = json.load(f)
+
+config.dictConfig(log_conf)
+logger = getLogger(__name__)
 
 with open("./schedule.json", "r") as file:
     data = json.load(file)
@@ -13,7 +19,7 @@ with open("./schedule.json", "r") as file:
     defaultRoom = data["defaultRoom"]
 
 
-print(email, password, defaultRoom)
+logger.info(f"email: {email}, password: {password}, defaultRoom: {defaultRoom}")
 # スケジューラを初期化
 scheduler = BackgroundScheduler()
 timestamp = f"{datetime.now()}"
@@ -27,7 +33,7 @@ for schedule in data["schedules"]:
     minute = schedule["minute"]
     room = schedule["room"]
     text = schedule["message"]
-    print(f"Day: {dayOfWeek}, Time: {hour}:{minute}, Room: {room}, Message: {text}")
+    logger.info(f"Schedule: {dayOfWeek} {hour}:{minute} {room} {text}")
 
     scheduler.add_job(
         wrapped_send_text_message,
@@ -40,9 +46,9 @@ scheduler.start()
 
 # メインスレッドを終了させないように待機
 try:
-    print("Scheduler started. Press Ctrl+C to exit.")
+    logger.info("Scheduler started.Press Ctrl+C to stop.")
     while True:
         time.sleep(1)
 except (KeyboardInterrupt, SystemExit):
     scheduler.shutdown()
-    print("Scheduler stopped.")
+    logger.info("Scheduler stopped.")
