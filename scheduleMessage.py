@@ -10,21 +10,20 @@ with open("./log_config.json", "r") as f:
 config.dictConfig(log_conf)
 logger = getLogger(__name__)
 
-with open("./schedule.json", "r") as file:
-    data = json.load(file)
-    email = data["email"]
-    password = data["password"]
-    defaultRoom = data["defaultRoom"]
-
 
 def main():
+    with open("./schedule.json", "r") as file:
+        data = json.load(file)
+        email = data["email"]
+        password = data["password"]
+        defaultRoom = data["defaultRoom"]
     logger.info(f"email: {email}, defaultRoom: {defaultRoom}")
-    # スケジューラを初期化
+    # Initialize the scheduler
     scheduler = BackgroundScheduler()
     wrapped_send_text_message(
         email, password, "Message scheduler started!!", defaultRoom
     )
-    # 一度きりのスケジュールを追加
+    # Add one-time schedules
     for one_time_schedule in data.get("oneTimeSchedules", []):
         run_date = datetime(
             one_time_schedule["year"],
@@ -44,7 +43,7 @@ def main():
             trigger="date",
             run_date=run_date,
         )
-    # 毎週のスケジュールを追加
+    # Add weekly schedules
     for schedule in data.get("weeklySchedules", []):
         day_of_week = schedule["dayOfWeek"]
         hour = schedule["hour"]
@@ -61,11 +60,11 @@ def main():
             trigger=CronTrigger(day_of_week=day_of_week, hour=hour, minute=minute),
         )
 
-    # スケジューラを開始
+    # Start the scheduler
     scheduler.start()
     logger.info("Scheduler started.Press Ctrl+C to stop.")
-    # メインスレッドを終了させないように待機
-    try:  # メニューを表示し、インターフェースを提供
+    # Wait to prevent the main thread from exiting
+    try:  # Show menu and handle user input
         while True:
             print("\nMenu:")
             print("1. View current tasks")
@@ -82,7 +81,7 @@ def main():
                         if callable(job.func):
                             print(
                                 f"\nMessage: {job.args[2]}, Room:{job.args[3]},  Next Run Time: {job.next_run_time}"
-                            )  # 引数を順番で指定しているのでバグの可能性あり
+                            )  # Potential bug due to arguments being specified by order
             elif choice == "2":
                 try:
                     text = input("Enter text message: ")
@@ -108,6 +107,9 @@ def main():
                             run_date=run_date,
                         )
                         print("Task scheduled.\n")
+                        logger.info(
+                            f"Task scheduled - Message: {text}, Room: {room}, Run Date: {run_date}"
+                        )
                     else:
                         print("Task not scheduled.\n")
                 except KeyboardInterrupt:
