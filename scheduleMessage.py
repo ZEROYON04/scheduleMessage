@@ -99,13 +99,18 @@ def schedule_one_time_message(email, password, scheduler):
         text = input("Enter text message: ")
         room = input("Enter room: ")
         while True:
-            run_date_str = input("Enter run date (YYYY-MM-DD HH:MM:SS): ")
+            run_date_str = input("Enter run date (MM-DD HH:MM): ")
             try:
-                run_date = datetime.strptime(run_date_str, "%Y-%m-%d %H:%M:%S")
+                current_year = datetime.now().year
+                run_date = datetime.strptime(
+                    f"{current_year}-{run_date_str}", "%Y-%m-%d %H:%M"
+                )
+                if run_date < datetime.now():
+                    run_date = run_date.replace(year=current_year + 1)
                 break
             except ValueError:
                 print(
-                    "Incorrect format. Please enter the date in the format YYYY-MM-DD HH:MM:SS."
+                    "Incorrect format. Please enter the date in the format MM-DD HH:MM."
                 )
 
         confirm = input("Do you want to schedule this task? (y/n): ")
