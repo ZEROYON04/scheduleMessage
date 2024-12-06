@@ -132,7 +132,7 @@ def main():
     email = config["email"]
     password = config["password"]
     defaultRoom = config["defaultRoom"]
-    logger.info(f"email: {email}, password: {password}, defaultRoom: {defaultRoom}")
+    print(f"email: {email}, password: {password}, defaultRoom: {defaultRoom}")
 
     sendText = get_current_time_message()
 
