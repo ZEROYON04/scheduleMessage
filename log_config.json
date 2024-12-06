@@ -25,17 +25,17 @@
     "loggers": {
         "__main__": {
             "level": "DEBUG",
-            "handlers": ["consoleHandler", "fileHandler"],
+            "handlers": [ "fileHandler"],
             "propagate": true
         },
         "same_hierarchy": {
             "level": "DEBUG",
-            "handlers": ["consoleHandler", "fileHandler"],
+            "handlers": [ "fileHandler"],
             "propagate": true
         },
         "lower.sub": {
             "level": "DEBUG",
-            "handlers": ["consoleHandler", "fileHandler"],
+            "handlers": [ "fileHandler"],
             "propagate": true
         }
     },

@@ -17,7 +17,7 @@ def main():
         email = data["email"]
         password = data["password"]
         defaultRoom = data["defaultRoom"]
-    logger.info(f"email: {email}, defaultRoom: {defaultRoom}")
+    print(f"email: {email}, defaultRoom: {defaultRoom}")
     # Initialize the scheduler
     scheduler = BackgroundScheduler()
     wrapped_send_text_message(
@@ -34,15 +34,13 @@ def main():
         )
         room = one_time_schedule.get("room", defaultRoom)
         text = one_time_schedule.get("message", "Default message")
-        print(
-            f"One-time Schedule - Run Date: {run_date}, Room: {room}, Message: {text}"
-        )
         scheduler.add_job(
             func=wrapped_send_text_message,
             args=[email, password, text, room],
             trigger="date",
             run_date=run_date,
         )
+    logger.info("One-time schedules loaded.")
     # Add weekly schedules
     for schedule in data.get("weeklySchedules", []):
         day_of_week = schedule["dayOfWeek"]
@@ -50,30 +48,29 @@ def main():
         minute = schedule["minute"]
         room = schedule.get("room", defaultRoom)
         text = schedule.get("message", "Error: No message provided.")
-        logger.info(
-            f"Day: {day_of_week}, Time: {hour}:{minute}, Room: {room}, Message: {text}"
-        )
-
         scheduler.add_job(
             func=wrapped_send_text_message,
             args=[email, password, text, room],
             trigger=CronTrigger(day_of_week=day_of_week, hour=hour, minute=minute),
         )
+    logger.info("Weekly schedules loaded.")
 
     # Start the scheduler
     scheduler.start()
-    logger.info("Scheduler started.Press Ctrl+C to stop.")
+    display_scheduled_messages(scheduler)
+    logger.info("Scheduler started.")
+    print("Scheduler started.Press Ctrl+C to stop.")
     # Wait to prevent the main thread from exiting
     try:  # Show menu and handle user input
         while True:
             print("\nMenu:")
-            print("1. View current tasks")
+            print("1. View current scheduled messages")
             print("2. Add new one-time message")
             print("Press Ctrl+C to exit.")
             choice = input("Enter your choice: ")
 
             if choice == "1":
-                display_scheduled_tasks(scheduler)
+                display_scheduled_messages(scheduler)
             elif choice == "2":
                 schedule_one_time_message(email, password, scheduler)
             else:
@@ -81,18 +78,20 @@ def main():
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
         logger.info("Scheduler stopped.")
+        print("Scheduler stopped.")
 
 
-def display_scheduled_tasks(scheduler):
+def display_scheduled_messages(scheduler):
     jobs = scheduler.get_jobs()
     if not jobs:
-        print("No scheduled tasks.\n")
+        print("No scheduled messages.\n")
     else:
+        print("scheduled messages:")
         for job in jobs:
             if callable(job.func):
                 print(
-                    f"\nMessage: {job.args[2]}, Room:{job.args[3]},  Next Run Time: {job.next_run_time}"
-                )  # Potential bug due to arguments being specified by order
+                    f"\nMessage: {job.args[2]} \n\033[91mRoom: {job.args[3]}\033[0m \n\033[94mNext Run Time: {job.next_run_time.strftime('%Y-%m-%d %H:%M:%S')}\033[0m"
+                )
 
 
 def schedule_one_time_message(email, password, scheduler):
