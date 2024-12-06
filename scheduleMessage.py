@@ -111,6 +111,29 @@ def schedule_one_time_message(email, password, scheduler):
 
         confirm = input("Do you want to schedule this task? (y/n): ")
         if confirm.lower() == "y":
+            # Add the task to schedule.json
+            new_task = {
+                "year": run_date.year,
+                "month": run_date.month,
+                "day": run_date.day,
+                "hour": run_date.hour,
+                "minute": run_date.minute,
+                "room": room,
+                "message": text,
+            }
+
+            # Read schedule.json
+            with open("./schedule.json", "r") as file:
+                data = json.load(file)
+
+            data["oneTimeSchedules"].append(new_task)
+
+            # Rewrite schedule.json
+            with open("./schedule.json", "w") as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+
+            logger.info("Task added to schedule.json.")
+
             scheduler.add_job(
                 func=wrapped_send_text_message,
                 args=[email, password, text, room],
