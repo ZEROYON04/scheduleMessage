@@ -12,8 +12,10 @@ def main():
     with open("./schedule.json", "r") as file:
         data = json.load(file)
         email = data["email"]
-        password = data["password"]
         defaultRoom = data["defaultRoom"]
+
+    # Remove past schedules
+    data = remove_past_schedules(data)
 
     print(f"email: {email}, defaultRoom: {defaultRoom}")
     while True:
@@ -34,6 +36,34 @@ def main():
             print("Invalid choice. Please try again.\n")
 
 
+def remove_past_schedules(data):
+    current_time = datetime.now()
+
+    # Remove past one-time schedules
+    data["oneTimeSchedules"] = [
+        schedule
+        for schedule in data.get("oneTimeSchedules", [])
+        if datetime(
+            schedule["year"],
+            schedule["month"],
+            schedule["day"],
+            schedule["hour"],
+            schedule["minute"],
+        )
+        > current_time
+    ]
+
+    # Remove past weekly schedules (if needed)
+    # Assuming weekly schedules are always valid for the future
+
+    # Rewrite schedule.json
+    with open("./schedule.json", "w") as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)
+
+    logger.info("Past schedules removed from schedule.json.")
+    return data
+
+
 def display_scheduled_messages(data):
     for one_time_schedule in data.get("oneTimeSchedules", []):
         run_date = datetime(
@@ -51,8 +81,10 @@ def display_scheduled_messages(data):
         day_of_week = schedule["dayOfWeek"]
         hour = schedule["hour"]
         minute = schedule["minute"]
-        room = one_time_schedule["room"]
-        text = schedule.get("message", "Error: No message provided.")
+        room = schedule["room"]
+        text = schedule.get("message", "Error: No message provided.").replace(
+            "\n", "\\n"
+        )
         print(
             f"Day of Week: {day_of_week}, Time: {hour}:{minute}, Room: {room}, Message: {text}"
         )
